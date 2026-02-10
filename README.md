@@ -127,6 +127,7 @@ clients:
         port: 22                  # SSH port (default: 22)
         tags: ["prod", "docker", "django", "postgres"]
         ssh_alias: null           # optional ~/.ssh/config alias
+        docker_user: "appuser"    # Run docker commands as appuser via sudo -u
 
       - name: "acme-stg"
         host: "stg.acme.io"
