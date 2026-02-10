@@ -1,0 +1,99 @@
+# ops-launcher configuration
+# Copy this file to ~/.config/ops-launcher/hosts.yaml
+# or set OPS_CONFIG=/path/to/your/hosts.yaml
+
+version: 1
+
+defaults:
+  ssh_options:
+  - "-o"
+  - "ConnectTimeout=10"
+  - "-o"
+  - "ServerAliveInterval=60"
+
+clients:
+  acme:
+    description: "Acme Corp infrastructure"
+    hosts:
+    - name: "acme-prod"
+      host: "prod.acme.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "prod", "docker", "django", "postgres", "redis", "nginx" ]
+      ssh_alias: null
+      compose_path: "/srv/app"
+      project_dir: "/srv/app"
+      docker_user: "appuser" # Run docker commands as appuser via sudo -u
+
+    - name: "acme-stg"
+      host: "stg.acme.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "stg", "docker", "django" ]
+      ssh_alias: null
+      compose_path: "/srv/app"
+
+    - name: "acme-worker"
+      host: "worker.acme.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "prod", "docker", "celery" ]
+      ssh_alias: null
+      compose_path: "/srv/worker"
+
+    - name: "acme-db"
+      host: "db.acme.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "prod", "postgres", "backups" ]
+      ssh_alias: null
+
+  techcorp:
+    description: "TechCorp — systems administration"
+    hosts:
+    - name: "techcorp-main"
+      host: "main.techcorp.com"
+      user: "root"
+      port: 22
+      tags: [ "prod", "docker", "monitoring", "nginx", "traefik" ]
+      ssh_alias: null
+      compose_path: "/opt/stack"
+
+    - name: "techcorp-dev"
+      host: "dev.techcorp.com"
+      user: "deploy"
+      port: 2222
+      tags: [ "stg", "docker", "django" ]
+      ssh_alias: null
+
+  startup:
+    description: "Startup Inc"
+    hosts:
+    - name: "startup-large"
+      host: "large.startup.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "stg", "docker", "monitoring", "django" ]
+      ssh_alias: null
+      compose_path: "/srv/platform"
+
+    - name: "startup-small"
+      host: "small.startup.io"
+      user: "ubuntu"
+      port: 22
+      tags: [ "stg", "docker" ]
+      ssh_alias: null
+
+  personal:
+    description: "Personal server — myserver.dev"
+    hosts:
+    - name: "myserver"
+      host: "myserver.dev"
+      user: "user"
+      port: 22
+      tags: [ "prod", "docker", "nginx", "personal" ]
+      ssh_alias: "myserver" # Uses ~/.ssh/config alias
+
+# actions:
+#   Custom actions can be added here in future versions.
+#   For now, built-in actions (ssh, health, docker, compose) are used.
