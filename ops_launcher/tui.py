@@ -17,6 +17,7 @@ from ops_launcher.actions import (
 )
 from ops_launcher.config import Host, OpsConfig
 from ops_launcher.executor import run_capture_remote, run_interactive, run_streaming
+from ops_launcher.history import load_recent_hosts, record_host_usage
 from ops_launcher.ssh import build_remote_command
 from ops_launcher.utils import (
     confirm_action,
