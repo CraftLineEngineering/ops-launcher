@@ -227,11 +227,14 @@ Tags control which actions are available for each host:
 
 ## Security Notes
 
-- **No passwords** are stored in config or code.
-- SSH authentication relies on **SSH keys** and/or **ssh-agent**.
-- Use `~/.ssh/config` for complex SSH setups (jump hosts, custom keys, etc.) and reference them via `ssh_alias`.
+- **No passwords** are stored in config or code — SSH key/agent auth only.
+- Use `~/.ssh/config` for complex SSH setups (jump hosts, custom keys, ProxyJump) and reference them via `ssh_alias`.
 - The `ssh_options` defaults include `ConnectTimeout=10` to fail fast on unreachable hosts.
-- **Destructive actions** (`compose down`, `compose restart`, future `terraform apply`) always require interactive confirmation.
+- **Destructive actions** (`compose down`, `compose restart`, `nginx reload`, future `terraform apply`) always require interactive confirmation.
+- Commands are **previewed** before execution so you can verify what will run.
+- Config file should have restrictive permissions: `chmod 600 ~/.config/ops-launcher/hosts.yaml`.
+
+See [SECURITY.md](SECURITY.md) for the full security policy.
 
 ## Project Structure
 
@@ -240,6 +243,7 @@ ops-launcher/
 ├── pyproject.toml          # PEP 621 packaging
 ├── README.md
 ├── LICENSE                 # MIT
+├── SECURITY.md             # security policy
 ├── CHANGELOG.md
 ├── Makefile                # dev tasks: test, lint, format
 ├── ops_launcher/
@@ -250,6 +254,7 @@ ops-launcher/
 │   ├── actions.py          # action registry & command builders
 │   ├── executor.py         # subprocess runner, streaming output
 │   ├── ssh.py              # SSH command building
+│   ├── history.py          # recent host usage tracking
 │   └── utils.py            # prompts, fuzzy match, formatting
 ├── examples/
 │   └── hosts.yaml          # sample config
