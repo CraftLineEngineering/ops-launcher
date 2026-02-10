@@ -42,6 +42,7 @@ class Host:
     compose_path: str | None = None  # remote path to docker-compose project dir
     stack_name: str | None = None    # docker compose project/stack name
     project_dir: str | None = None   # general-purpose remote project directory
+    docker_user: str | None = None  # user to run docker commands as (via sudo -u)
 
     @property
     def display(self) -> str:
@@ -192,6 +193,7 @@ def _parse_host(data: dict[str, Any], client_name: str) -> Host:
         compose_path=data.get("compose_path"),
         stack_name=data.get("stack_name"),
         project_dir=data.get("project_dir"),
+        docker_user=data.get("docker_user"),
     )
 
 

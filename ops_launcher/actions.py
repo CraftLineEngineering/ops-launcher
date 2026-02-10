@@ -204,24 +204,27 @@ def build_action_command(
                 "(cat /proc/loadavg 2>/dev/null "
                 "|| sysctl -n vm.loadavg 2>/dev/null || uptime) && "
                 "echo '\\n=== Docker ===' && "
-                "(docker ps --format 'table {{.Names}}\\t{{.Status}}' "
-                "2>/dev/null || echo 'Docker not available')"
+                + _docker_command(
+                    host,
+                    'docker ps --format "table {{.Names}}\\t{{.Status}}" '
+                    '2>/dev/null || echo "Docker not available"'
+                )
             )
             return build_remote_command(host, ssh_defaults, remote)
 
         case "docker_ps":
-            docker_ps_fmt = (
-                "docker ps --format "
-                "'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'"
+            docker_ps_fmt = _docker_command(
+                host,
+                "docker ps --format 'table {{.Names}}\\t{{.Status}}\\t{{.Ports}}'"
             )
             return build_remote_command(
                 host, ssh_defaults, docker_ps_fmt,
             )
 
         case "docker_stats":
-            docker_stats_fmt = (
-                "docker stats --no-stream --format "
-                "'table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}'"
+            docker_stats_fmt = _docker_command(
+                host,
+                "docker stats --no-stream --format 'table {{.Name}}\\t{{.CPUPerc}}\\t{{.MemUsage}}'"
             )
             return build_remote_command(
                 host, ssh_defaults, docker_stats_fmt,
@@ -229,30 +232,40 @@ def build_action_command(
 
         case "docker_logs":
             svc = service or ""
-            tail_cmd = f"docker logs --tail 100 {'-f' if follow else ''} {svc}".strip()
+            docker_cmd = f"docker logs --tail 100 {'-f' if follow else ''} {svc}".strip()
+            tail_cmd = _docker_command(host, docker_cmd)
             return build_remote_command(host, ssh_defaults, tail_cmd, allocate_tty=follow)
 
         case "compose_ps":
             cd_prefix = _compose_cd(compose_path)
-            return build_remote_command(host, ssh_defaults, f"{cd_prefix}docker compose ps")
+            compose_cmd = f"{cd_prefix}docker compose ps"
+            docker_cmd = _docker_command(host, compose_cmd)
+            return build_remote_command(host, ssh_defaults, docker_cmd)
 
         case "compose_up":
             cd_prefix = _compose_cd(compose_path)
-            return build_remote_command(host, ssh_defaults, f"{cd_prefix}docker compose up -d")
+            compose_cmd = f"{cd_prefix}docker compose up -d"
+            docker_cmd = _docker_command(host, compose_cmd)
+            return build_remote_command(host, ssh_defaults, docker_cmd)
 
         case "compose_down":
             cd_prefix = _compose_cd(compose_path)
-            return build_remote_command(host, ssh_defaults, f"{cd_prefix}docker compose down")
+            compose_cmd = f"{cd_prefix}docker compose down"
+            docker_cmd = _docker_command(host, compose_cmd)
+            return build_remote_command(host, ssh_defaults, docker_cmd)
 
         case "compose_restart":
             cd_prefix = _compose_cd(compose_path)
-            return build_remote_command(host, ssh_defaults, f"{cd_prefix}docker compose restart")
+            compose_cmd = f"{cd_prefix}docker compose restart"
+            docker_cmd = _docker_command(host, compose_cmd)
+            return build_remote_command(host, ssh_defaults, docker_cmd)
 
         case "compose_logs":
             cd_prefix = _compose_cd(compose_path)
+            compose_cmd = f"{cd_prefix}docker compose logs --tail 100 -f"
+            docker_cmd = _docker_command(host, compose_cmd)
             return build_remote_command(
-                host, ssh_defaults,
-                f"{cd_prefix}docker compose logs --tail 100 -f",
+                host, ssh_defaults, docker_cmd,
                 allocate_tty=True,
             )
 
@@ -319,6 +332,13 @@ def build_action_command(
 
         case _:
             raise ValueError(f"Unknown action: {action.name}")
+
+
+def _docker_command(host: Host, command: str) -> str:
+    """Build a docker command, optionally with sudo -u docker_user."""
+    if host.docker_user:
+        return f"sudo -n -u {host.docker_user} {command}"
+    return command
 
 
 def _compose_cd(compose_path: str | None) -> str:

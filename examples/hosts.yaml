@@ -23,6 +23,7 @@ clients:
       ssh_alias: null
       compose_path: "/srv/app"
       project_dir: "/srv/app"
+      docker_user: "appuser" # Run docker commands as appuser via sudo -u
 
     - name: "acme-stg"
       host: "stg.acme.io"

@@ -30,6 +30,18 @@ from ops_launcher.utils import (
 )
 
 # ---------------------------------------------------------------------------
+# Helper functions
+# ---------------------------------------------------------------------------
+
+
+def _docker_command(host: Host, command: str) -> str:
+    """Build a docker command, optionally with sudo -u docker_user."""
+    if host.docker_user:
+        return f"sudo -n -u {host.docker_user} {command}"
+    return command
+
+
+# ---------------------------------------------------------------------------
 # Interactive flow
 # ---------------------------------------------------------------------------
 
@@ -182,10 +194,8 @@ def _pick_remote_service(host: Host, config: OpsConfig) -> str | None:
 
     # Try docker compose ps --services first
     cd_prefix = f"cd {host.compose_path} && " if host.compose_path else ""
-    compose_cmd = build_remote_command(
-        host, config.ssh_defaults,
-        f"{cd_prefix}docker compose ps --services 2>/dev/null",
-    )
+    compose_remote = f"{cd_prefix}docker compose ps --services 2>/dev/null"
+    compose_cmd = build_remote_command(host, config.ssh_defaults, compose_remote)
     console.print("  [dim]Discovering compose services...[/dim]")
     rc, output = run_capture_remote(compose_cmd)
     if rc == 0 and output.strip():
@@ -193,10 +203,8 @@ def _pick_remote_service(host: Host, config: OpsConfig) -> str | None:
 
     # Fallback: list running container names
     if not services:
-        docker_cmd = build_remote_command(
-            host, config.ssh_defaults,
-            "docker ps --format '{{.Names}}' 2>/dev/null",
-        )
+        docker_remote = _docker_command(host, "docker ps --format '{{.Names}}' 2>/dev/null")
+        docker_cmd = build_remote_command(host, config.ssh_defaults, docker_remote)
         console.print("  [dim]Discovering running containers...[/dim]")
         rc, output = run_capture_remote(docker_cmd)
         if rc == 0 and output.strip():
